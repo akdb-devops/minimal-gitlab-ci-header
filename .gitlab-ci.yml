@@ -1,0 +1,35 @@
+spec:
+  inputs:
+    log_level:
+      description: "The log level. Possible values are info, warn, error or debug"
+      default: "info"
+      type: string
+      regex: "^(info|warn|error|debug)$"
+    repo:
+      description: "The repos (comma-separated) to run the Test Renovate on"
+      default: "platform-services/devops/ci/renovate/renovate-bot-config"
+      type: string
+      regex: "^([a-zA-Z0-9_.\\-/]+)(,[a-zA-Z0-9_.\\-/]+)*$"
+    dry_run:
+      description: "If set to true, the job will not run any changes. It will only show what would be done."
+      default: false
+      type: boolean
+---
+include:
+  # This version is not detected anymore
+  - remote: https://gitlab.com/renovate-bot/renovate-runner/-/raw/v22.0.0/templates/renovate.gitlab-ci.yml
+
+variables:
+  # This image version is not detected anymore:
+  CI_RENOVATE_IMAGE: registry-1.docker.io/renovate/renovate:40.10.6
+
+Renovate Test:
+  extends: renovate
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: always
+  variables:
+    LOG_LEVEL: $[[ inputs.log_level ]]
+    RENOVATE_REPOSITORIES: $[[ inputs.repo ]]
+    RENOVATE_EXTRA_FLAGS: "--autodiscover=false"
+    RENOVATE_DRY_RUN: ${if $[[ inputs.dry_run ]], 'full', 'null'}
